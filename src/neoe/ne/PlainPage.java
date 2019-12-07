@@ -1,25 +1,15 @@
 package neoe.ne;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.TexturePaint;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
+import static neoe.ne.U.returnStringWidth;
+
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-
 import neoe.ne.CommandPanel.CommandPanelPaint;
 import neoe.ne.Ime.Out;
 import neoe.ne.Plugin.PluginAction;
@@ -623,14 +613,14 @@ public class PlainPage {
 			void markBox(Graphics2D g2, int x, int y) {
 				if (y >= sy && y <= sy + showLineCnt && x >= sx) {
 					CharSequence sb = pageData.roLines.getline(y);
-					int w1 = x > 0 ? U.strWidth(g2, U.fontList, sb.subSequence(sx, x).toString(), TABWIDTH) : 0;
+					int w1 = x > 0 ? U.returnStringWidth(g2, U.fontList, sb.subSequence(sx, x).toString()) : 0;
 					String c = sb.subSequence(x, x + 1).toString();
-					int w2 = U.strWidth(g2, U.fontList, c, TABWIDTH);
+					int w2 = U.returnStringWidth(g2, U.fontList, c);
 					g2.setColor(Color.WHITE);
 					g2.drawRect(w1 - 1, (y - sy) * (lineHeight + lineGap) - 1, w2, lineHeight);
 					g2.setColor(colorNormal);
 					g2.drawRect(w1, (y - sy) * (lineHeight + lineGap), w2, lineHeight);
-					U.drawString(g2, U.fontList, c, w1, lineHeight + (y - sy) * (lineHeight + lineGap));
+					U.returnStringWidth(g2, U.fontList, c, w1, lineHeight + (y - sy) * (lineHeight + lineGap));
 				}
 			}
 
@@ -780,7 +770,7 @@ public class PlainPage {
 
 		void drawNextToolbarText(Graphics2D g2, String s) {
 			g2.setColor(colorGutMark2);
-			nextXToolBar += 10 + U.drawString(g2, U.fontList, s, 10 + nextXToolBar, lineHeight);
+			nextXToolBar += 10 + returnStringWidth(g2, U.fontList, s, 10 + nextXToolBar, lineHeight);
 		}
 
 		void drawReturn(Graphics2D g2, int w, int py) {
@@ -812,12 +802,12 @@ public class PlainPage {
 					x1 = s.length();
 				}
 				if (x1 == x2) {
-					int w1 = U.strWidth(g2, U.fontList, s.subSequence(0, x1).toString(), TABWIDTH);
+					int w1 = U.returnStringWidth(g2, U.fontList, s.subSequence(0, x1).toString());
 					g2.fillRect(w1, scry * (lineHeight + lineGap), 3, lineHeight + lineGap);
 				} else {
-					int w1 = U.strWidth(g2, U.fontList, s.subSequence(0, x1).toString(), TABWIDTH);
+					int w1 = U.returnStringWidth(g2, U.fontList, s.subSequence(0, x1).toString());
 					int w2 = x2 > x2a ? textAreaWidth
-							: U.strWidth(g2, U.fontList, s.subSequence(0, x2a).toString(), TABWIDTH);
+							: U.returnStringWidth(g2, U.fontList, s.subSequence(0, x2a).toString());
 					g2.fillRect(w1, scry * (lineHeight + lineGap), (w2 - w1), lineHeight + lineGap);
 				}
 			}
@@ -855,7 +845,7 @@ public class PlainPage {
 				for (int i = 0; i < msgs.size(); i++) {
 					Object[] row = msgs.get(i);
 					int w1 = (Integer) row[2];
-					U.drawString(g, U.fontList, row[0].toString(), (dim.width - w1) / 2,
+					U.returnStringWidth(g, U.fontList, row[0].toString(), (dim.width - w1) / 2,
 							(10 + dim.height / 2 + 30 * (i - msgs.size() / 2)));
 				}
 			}
@@ -931,8 +921,7 @@ public class PlainPage {
 					} else {
 						// int highlightid =
 						U.getHighLightID(s1, g2, colorKeyword, colorDigit, colorNormal);
-						U.drawString(g2, U.fontList, s1, x + w, y, isCurrentLine, lineHeight);
-						w += U.stringWidth(g2, U.fontList, s1);
+						w += U.returnStringWidth(g2, U.fontList, s1, true, x + w, y, isCurrentLine, lineHeight);
 					}
 					if (w > dim.width - gutterWidth) {
 						break;
@@ -974,18 +963,18 @@ public class PlainPage {
 					+ (pageData.getFn() == null ? "-" : pageData.getFn() + (changedOutside ? " [ChangedOutside!]" : ""))
 					+ (readonly ? ", ro" : "");
 			g2.setColor(colorGutMark1);
-			U.drawString(g2, U.fontList, s1, 2, lineHeight + 2);
+			U.returnStringWidth(g2, U.fontList, s1, 2, lineHeight + 2);
 			g2.setColor(colorGutMark2);
-			nextXToolBar = 2 + U.drawString(g2, U.fontList, s1, 1, lineHeight + 1);
+			nextXToolBar = 2 + U.returnStringWidth(g2, U.fontList, s1, 1, lineHeight + 1);
 			if (msg != null) {
 				if (System.currentTimeMillis() - msgtime > MSG_VANISH_TIME) {
 					msg = null;
 				} else {
-					int w = U.stringWidth(g2, U.fontList, msg);
+					int w = U.returnStringWidth(g2, U.fontList, msg);
 					g2.setColor(new Color(0xee6666));
 					g2.fillRect(dim.width - w, 0, dim.width, lineHeight + lineGap);
 					g2.setColor(Color.YELLOW);
-					U.drawString(g2, U.fontList, msg, dim.width - w, lineHeight);
+					U.returnStringWidth(g2, U.fontList, msg, dim.width - w, lineHeight);
 				}
 			}
 		}
@@ -1033,7 +1022,7 @@ public class PlainPage {
 			long fpsT1 = System.currentTimeMillis();
 			Graphics2D g2 = (Graphics2D) g;
 
-			g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, uiComp.config.VALUE_TEXT_ANTIALIAS);
+			g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, EditorPanelConfig.VALUE_TEXT_ANTIALIAS);
 			this.dim = size;
 			Graphics2D g3 = null;
 			if (fpsOn) {
@@ -1078,14 +1067,20 @@ public class PlainPage {
 					sx = Math.max(0, cx - charCntInLine / 2);
 				} else {
 					sx = Math.max(0, Math.max(sx, cx - charCntInLine + 10));
-					if (U.strWidth(g2, U.fontList, U.subs(pageData.roLines.getline(cy), sx, cx).toString(),
-							TABWIDTH) > size.width - lineHeight * 3) {
+					if (
+						U.returnStringWidth(g2, U.fontList,
+							U.subs(pageData.roLines.getline(cy), sx, cx).toString()
+						) > size.width - lineHeight * 3
+					) {
 						sx = Math.max(0, cx - charCntInLine / 2);
 						int xx = charCntInLine / 4;
 
-						while (xx > 0
-								&& U.strWidth(g2, U.fontList, U.subs(pageData.roLines.getline(cy), sx, cx).toString(),
-										TABWIDTH) > size.width - lineHeight * 3) {
+						while (
+							xx > 0 && U.returnStringWidth(
+								g2, U.fontList,
+								U.subs(pageData.roLines.getline(cy), sx, cx).toString()
+							) > size.width - lineHeight * 3
+						) {
 							sx = Math.max(0, cx - xx - 1);
 							xx /= 2; // quick guess
 						}
@@ -1169,17 +1164,17 @@ public class PlainPage {
 				if (cy >= sy && cy <= sy + showLineCnt) {
 					g2.setXORMode(new Color(0x30f0f0));
 					CharSequence s = U.subs(pageData.roLines.getline(cy), sx, cx);
-					int w = U.strWidth(g2, U.fontList, s.toString(), TABWIDTH);
+					int w = U.returnStringWidth(g2, U.fontList, s.toString());
 					int y0 = (cy - sy) * (lineHeight + lineGap);
 					g2.fillRect(w, y0, 2, lineHeight + 3);
 					// draw preedit
 					if (preeditText != null && preeditText.length() > 0) {
 						g2.setPaintMode();
 						g2.setColor(new Color(0xaaaa00));
-						int w0 = U.strWidth(g2, U.fontList, preeditText, TABWIDTH);
+						int w0 = U.returnStringWidth(g2, U.fontList, preeditText);
 						g2.fillRect(w, y0, w0 + 4, lineHeight + lineGap);
 						g2.setColor(new Color(0x0000aa));
-						U.drawString(g2, U.fontList, preeditText, w + 2, y0 + lineHeight);
+						U.returnStringWidth(g2, U.fontList, preeditText, w + 2, y0 + lineHeight);
 					}
 
 					// ime

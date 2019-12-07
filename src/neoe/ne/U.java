@@ -1,81 +1,26 @@
 package neoe.ne;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.Toolkit;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
+import java.awt.*;
+import java.awt.datatransfer.*;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.awt.print.Book;
-import java.awt.print.PageFormat;
-import java.awt.print.Printable;
-import java.awt.print.PrinterException;
-import java.awt.print.PrinterJob;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StringWriter;
+import java.awt.print.*;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-
+import java.util.*;
 import javax.imageio.ImageIO;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.TransferHandler;
-import javax.swing.UIDefaults;
-import javax.swing.UIManager;
-
+import javax.swing.*;
 import neoe.ne.PlainPage.Paint;
 import neoe.ne.Plugin.PluginAction;
-import neoe.ne.util.FileIterator;
-import neoe.ne.util.FileUtil;
-import neoe.ne.util.PyData;
+import neoe.ne.util.*;
 
 /**
  * Trivial static methods.
  */
+@SuppressWarnings("ALL")
 public class U {
 
 	public static class LocationHistory<E> {
@@ -131,20 +76,16 @@ public class U {
 	}
 
 	static void drawStringShrink(Graphics2D g2, Font[] fontList, String s, int x, int y, float maxWidth) {
-		int width = stringWidth(g2, fontList, s);
+		int width = returnStringWidth(g2, fontList, s);
 		int max = Math.round(maxWidth);
 		if (width <= max) {
-			drawString(g2, fontList, s, x, y);
+			returnStringWidth(g2, fontList, s, x, y);
 		} else {
 			Graphics2D g3 = (Graphics2D) g2.create();
 			g3.scale((maxWidth - 3) / (float) width, 1);
-			drawString(g3, fontList, s, x, y);
+			returnStringWidth(g3, fontList, s, x, y);
 			g3.dispose();
 		}
-	}
-
-	public static int drawString(Graphics2D g2, Font[] fonts, String s, int x, int y) {
-		return drawString(g2, fonts, s, x, y, false, 0);
 	}
 
 	static String suNotice() {
@@ -156,53 +97,30 @@ public class U {
 		}
 	}
 
-	public static int drawString(Graphics2D g2, Font[] fonts, String s, int x, int y, boolean isCurrentLine,
-			int lineHeight) {
-		if (s == null || s.length() <= 0) {
-			return 0;
-		}
+	// calculate string width
+	public static int returnStringWidth(Graphics2D g2, Font[] fonts, String s) {
+		return returnStringWidth(g2, fonts, s, false, 0, 0, false, 0);
+	}
 
-		Font f = fonts[0];
-		int w = g2.getFontMetrics(f).stringWidth(s);
-		Color c2 = g2.getColor();
+	// calculate string width and draw current line
+	public static int returnStringWidth(Graphics2D g2, Font[] fonts, String s, int x, int y) {
+		return returnStringWidth(g2, fonts, s, true, x, y, false, 0);
+	}
 
-		if (isCurrentLine && w > 0) {
-			Gimp.drawString(g2, x, y, lineHeight, s, c2, f, w);
-
-		} else {
-			// StringBuilder s = new StringBuilder(s0);
+	// `x`, `y`, `currentLine` and `lineHeight` will be ignored if `draw` is false
+	public static int returnStringWidth(
+		Graphics2D g2, Font[] fonts, String s,
+		boolean draw, int x, int y, boolean currentLine, int lineHeight
+	) {
+		int w = 0;
+		for (int i = 0; i < s.length(); i++) {
+			Font f = fonts.length < 2 ? fonts[0] : CharClsfy.isCjk(s, i) ? fonts[1] : fonts[0];
+			String ch = s.substring(i, i + 1);
 			g2.setFont(f);
-			g2.drawString(s, x, y);
-			// // multi-font display disabled for performance
-			// while (true) {
-			// if (s.length() <= 0) {
-			// break;
-			// }
-			// int fp = 0;
-			// Font f = fonts[fp];
-			// int p1 = -1; // performance119: f.canDisplayUpTo(s.toString());
-			// if (p1 < 0) { // all
-			// g2.setFont(f);
-			// g2.drawString(s.toString(), x + w, y);
-			// w += g2.getFontMetrics(f).stringWidth(s.toString());
-			// s.setLength(0);
-			// } else {
-			// if (p1 != 0) {
-			// String sx = s.substring(0, p1);
-			// g2.setFont(f);
-			// g2.drawString(sx, x + w, y);
-			// w += g2.getFontMetrics(f).stringWidth(sx);
-			// s.delete(0, p1);
-			// }
-			// if (s.length() > 0) {
-			// char c0 = s.charAt(0);
-			// s.delete(0, 1);
-			// w += drawChar(g2, fonts, c0, x + w, y);
-			// }
-			//
-			// }
-			// }
-
+			if (draw) {
+				g2.drawString(ch, x + w, y);
+			}
+			w += ch.equals("\t") ? U.Config.readTabWidth() : (g2.getFontMetrics(f).stringWidth(ch));
 		}
 		return w;
 	}
@@ -227,42 +145,6 @@ public class U {
 			}
 		}
 		return g2.getFontMetrics(fonts[0]).charWidth(c);
-	}
-
-	/**
-	 * use first font, if cannot display character in that font , use second, and so
-	 * on
-	 */
-	public static int stringWidth(Graphics2D g2, Font[] fonts, String s0) {
-		if (s0 == null || s0.length() <= 0) {
-			return 0;
-		}
-		String s = s0;
-		Font f = fonts[0];
-		return g2.getFontMetrics(f).stringWidth(s);
-		// while (true) {
-		// if (s.length() <= 0) {
-		// break;
-		// }
-		// Font f = fonts[0];
-		// int p1 = f.canDisplayUpTo(s.toString());
-		// if (p1 < 0) { // all
-		// w += g2.getFontMetrics(f).stringWidth(s.toString());
-		// s.setLength(0);
-		// } else {
-		// if (p1 != 0) {
-		// w += g2.getFontMetrics(f).stringWidth(s.substring(0, p1));
-		// s.delete(0, p1);
-		// }
-		// if (s.length() > 0) {
-		// char c0 = s.charAt(0);
-		// s.delete(0, 1);
-		// w += charWidth(g2, fonts, c0);
-		// }
-		// }
-		// }
-		// return w;
-
 	}
 
 	static enum BasicAction {
@@ -498,28 +380,27 @@ public class U {
 					for (Object o : (List) v) {
 						List l = (List) o;
 						String fontfn = (String) l.get(0);
+						Font font;
 						File f = new File(fontfn);
+						int fontsize = ((BigDecimal) l.get(1)).intValue();
+
 						if (f.exists() && f.isFile()) {
-							int fontsize = ((BigDecimal) l.get(1)).intValue();
-							Font font = Font.createFont(Font.TRUETYPE_FONT, f);
-							if (font == null) {
-								System.out.println("cannot load truetype font:" + fontfn);
-								continue;
-							}
+							font = Font.createFont(Font.TRUETYPE_FONT, f);
 							System.out.println("load font file:" + fontfn);
-							if (l.size() > 2 && l.get(2).equals("BOLD")) {
-								font = font.deriveFont(Font.BOLD, fontsize);
-							} else if (l.size() > 2 && l.get(2).equals("ITALIC")) {
-								font = font.deriveFont(Font.ITALIC, fontsize);
-
-							} else {
-								font = font.deriveFont(Font.PLAIN, fontsize);
-							}
-							fonts.add(font);
 						} else {
+							font = new Font(fontfn, Font.PLAIN, fontsize);
 							System.out.println("font file not exists:" + fontfn);
-
 						}
+
+						if (l.size() > 2 && l.get(2).equals("BOLD")) {
+							font = font.deriveFont(Font.BOLD, fontsize);
+						} else if (l.size() > 2 && l.get(2).equals("ITALIC")) {
+							font = font.deriveFont(Font.ITALIC, fontsize);
+						} else {
+							font = font.deriveFont(Font.PLAIN, fontsize);
+						}
+
+						fonts.add(font);
 					}
 					if (fonts.isEmpty()) {
 						System.out.println("use default fonts.");
@@ -1049,7 +930,7 @@ public class U {
 						w += TAB_WIDTH_PRINT;
 					}
 					g2.setColor(colorComment);
-					w += U.drawString(g2, fonts, s1, x + w, y);
+					w += returnStringWidth(g2, fonts, s1, x + w, y);
 					if (w > dim.width - gutterWidth) {
 						break;
 					}
@@ -1064,7 +945,7 @@ public class U {
 					} else {
 						// int highlightid =
 						U.getHighLightID(s1, g2, colorKeyword, colorDigit, colorNormal);
-						w += U.drawString(g2, fonts, s1, x + w, y);
+						w += returnStringWidth(g2, fonts, s1, x + w, y);
 					}
 					if (w > dim.width - gutterWidth) {
 						break;
@@ -1119,13 +1000,13 @@ public class U {
 			}
 
 			g2.setColor(colorHeaderFooter);
-			U.drawString(g2, fonts, fn == null ? title : new File(fn).getName(), 0, lineGap + lineHeight);
+			returnStringWidth(g2, fonts, fn == null ? title : new File(fn).getName(), 0, lineGap + lineHeight);
 			{
 				String s = (pageIndex + 1) + "/" + totalPage;
-				U.drawString(g2, fonts, s, (int) pf.getImageableWidth() - U.strWidth(g2, fonts, s, TAB_WIDTH_PRINT) - 2,
+				returnStringWidth(g2, fonts, s, (int) pf.getImageableWidth() - returnStringWidth(g2, fonts, s) - 2,
 						lineGap + lineHeight);
 				s = new Date().toString() + " - NeoeEdit";
-				U.drawString(g2, fonts, s, (int) pf.getImageableWidth() - U.strWidth(g2, fonts, s, TAB_WIDTH_PRINT) - 2,
+				returnStringWidth(g2, fonts, s, (int) pf.getImageableWidth() - returnStringWidth(g2, fonts, s) - 2,
 						(int) pf.getImageableHeight() - 2);
 				g2.setColor(colorGutterLine);
 				g2.drawLine(gutterWidth - 4, headerHeight, gutterWidth - 4,
@@ -1139,7 +1020,7 @@ public class U {
 				}
 				int y = headerHeight + (lineGap + lineHeight) * (i + 1);
 				g2.setColor(colorLineNumber);
-				U.drawString(g2, fonts, "" + (p + 1), 0, y);
+				returnStringWidth(g2, fonts, "" + (p + 1), 0, y);
 				g2.setColor(colorNormal);
 				String s = roLines.getline(p++).toString();
 				if (s.length() > charCntInLine) {
@@ -1540,7 +1421,7 @@ public class U {
 		}
 		String s = s0.toString();
 
-		if (U.strWidth(g2, fonts, s, TABWIDTH) <= width) {
+		if (returnStringWidth(g2, fonts, s) <= width) {
 			return s.length();
 		}
 		int i = s.length() / 2;
@@ -1548,7 +1429,7 @@ public class U {
 			if (i == 0) {
 				return 0;
 			}
-			int w = U.strWidth(g2, fonts, s.substring(0, i), TABWIDTH);
+			int w = returnStringWidth(g2, fonts, s.substring(0, i));
 			if (w <= width) {
 				return i + computeShowIndex(s.substring(i), width - w, g2, fonts, TABWIDTH);
 			} else {
@@ -1675,9 +1556,9 @@ public class U {
 	static int drawTwoColor(Graphics2D g2, Font[] fonts, String s, int x, int y, Color c1, Color c2, int d,
 			boolean isCurrentLine, int lineHeight) {
 		g2.setColor(c2);
-		int w = U.drawString(g2, fonts, s, x + d, y + d);
+		int w = U.returnStringWidth(g2, fonts, s, true, x + d, y + d, isCurrentLine, lineHeight);
 		g2.setColor(c1);
-		U.drawString(g2, fonts, s, x, y, isCurrentLine, lineHeight);
+		U.returnStringWidth(g2, fonts, s, true, x, y, isCurrentLine, lineHeight);
 		return w;
 
 	}
@@ -2443,7 +2324,7 @@ public class U {
 			Object[] row = msgs.get(i);
 			int w1 = (Integer) row[2];
 			if (w1 == -1) {
-				w1 = U.stringWidth(g, fonts, row[0].toString());
+				w1 = U.returnStringWidth(g, fonts, row[0].toString(), false, 0, 0, false, 0);
 				row[2] = w1;
 			}
 			if (w1 > max) {
@@ -3151,27 +3032,6 @@ public class U {
 				}
 			}
 		});
-	}
-
-	static int strWidth(Graphics2D g2, Font[] fonts, String s, int TABWIDTH) {
-		if (s.indexOf("\t") < 0) {
-			return U.stringWidth(g2, fonts, s);
-		} else {
-			int w = 0;
-			int p1 = 0;
-			while (true) {
-				int p2 = s.indexOf("\t", p1);
-				if (p2 < 0) {
-					w += U.stringWidth(g2, fonts, s.substring(p1));
-					break;
-				} else {
-					w += U.stringWidth(g2, fonts, s.substring(p1, p2));
-					w += TABWIDTH;
-					p1 = p2 + 1;
-				}
-			}
-			return w;
-		}
 	}
 
 	static CharSequence subs(CharSequence sb, int a, int b) {
